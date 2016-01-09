@@ -12,6 +12,7 @@ import (
 type PostgresContext struct {
 	data_folder   string
 	engine_folder string
+	log_folder    string
 }
 
 type PostgresControlError struct {
@@ -34,7 +35,7 @@ func pg_ctl(ctx *PostgresContext, args ...string) (string, error) {
 	}
 
 	cmd := exec.Command(pg_ctl, args...)
-	raw_out, err := cmd.CombinedOutput()
+	raw_out, err := cmd.Output()
 	out := string(raw_out)
 	log.Print(out)
 
@@ -64,6 +65,10 @@ func pg_status(ctx *PostgresContext) status {
 	}
 }
 
+func logging_flag(ctx *PostgresContext) string {
+	return "--log=" + path.Join(ctx.log_folder, "data-engine.log")
+}
+
 func (e *PostgresControlError) Error() string {
 	return fmt.Sprintf("attempt to control postgres database at %v failed with code %v '%v'", e.context.data_folder, e.code, e.message)
 }
@@ -79,17 +84,27 @@ func (ctx *PostgresContext) Init(options map[string]string) error {
 			}
 		}
 	}
-	_, err := pg_ctl(ctx, "-D", ctx.data_folder, "init")
+
+	if _, err := os.Stat(ctx.log_folder); os.IsNotExist(err) {
+		if err = os.MkdirAll(ctx.log_folder, 0700); err != nil {
+			return &PostgresControlError{
+				fmt.Sprintf("Unable to create log folder '%v'.", ctx.log_folder),
+				-1,
+				ctx,
+			}
+		}
+	}
+	_, err := pg_ctl(ctx, "-D", ctx.data_folder, logging_flag(ctx), "init")
 	return err
 }
 
 func (ctx *PostgresContext) Start() error {
-	_, err := pg_ctl(ctx, "-w", "-D", ctx.data_folder, "start")
+	_, err := pg_ctl(ctx, "start", "-w", "-D", ctx.data_folder, logging_flag(ctx), "-o", `"-p 1914"`)
 	return err
 }
 
 func (ctx *PostgresContext) Stop() error {
-	_, err := pg_ctl(ctx, "-w", "-m", "fast", "-D", ctx.data_folder, "stop")
+	_, err := pg_ctl(ctx, "stop", "-w", "-m", "fast", "-D", ctx.data_folder, logging_flag(ctx))
 	return err
 }
 

@@ -10,6 +10,7 @@ import (
 var ctx = PostgresContext{
 	"/tmp/db",
 	"/tmp/postgres",
+	"/tmp/db-log",
 }
 
 func TestInit(t *testing.T) {
@@ -25,6 +26,7 @@ func TestStart(t *testing.T) {
 	if err := ctx.Start(); err != nil {
 		t.Errorf("Unable to start data engine because: '%v'", err.Error())
 		t.Fail()
+		return
 	}
 
 	ctx.Stop()
@@ -36,6 +38,7 @@ func TestStop(t *testing.T) {
 	if err := ctx.Start(); err != nil {
 		t.Errorf("Unable to start data engine because: '%v'", err.Error())
 		t.Fail()
+		return
 	}
 
 	if err := ctx.Stop(); err != nil {

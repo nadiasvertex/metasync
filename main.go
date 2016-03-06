@@ -8,4 +8,5 @@ var databaseEngineFolder = flag.String("db-engine-folder", "./db/engine", "path 
 
 func main() {
 	fmt.Printf("metasync server\ndb data folder=%v\ndb engine folder=%v\n", *databaseDataFolder, *databaseEngineFolder)
+
 }

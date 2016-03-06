@@ -1,5 +1,7 @@
 package control
 
+import "database/sql"
+
 type status int
 
 const (
@@ -16,4 +18,10 @@ type DatabaseControl interface {
 	Stop() error
 	Restart() error
 	Status() status
+	Open() (*sql.DB, error)
+}
+
+type DatabaseInit struct {
+	Article func(*sql.DB)
+	Model   func(*sql.DB)
 }

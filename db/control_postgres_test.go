@@ -17,7 +17,6 @@ func TestInit(t *testing.T) {
 	os.RemoveAll(ctx.data_folder)
 	if err := ctx.Init(nil); err != nil {
 		t.Errorf("Unable to initialize data engine with data folder='%v' because: '%v'", ctx.data_folder, err.Error())
-		t.Fail()
 	}
 }
 
@@ -25,7 +24,6 @@ func TestStart(t *testing.T) {
 	TestInit(t)
 	if err := ctx.Start(); err != nil {
 		t.Errorf("Unable to start data engine because: '%v'", err.Error())
-		t.Fail()
 		return
 	}
 
@@ -37,12 +35,10 @@ func TestStop(t *testing.T) {
 
 	if err := ctx.Start(); err != nil {
 		t.Errorf("Unable to start data engine because: '%v'", err.Error())
-		t.Fail()
 		return
 	}
 
 	if err := ctx.Stop(); err != nil {
 		t.Errorf("Unable to stop data engine because: '%v'", err.Error())
-		t.Fail()
 	}
 }

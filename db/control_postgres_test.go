@@ -8,9 +8,12 @@ import (
 // This test expects to find a postgres distribution in /tmp/postgres. It will create a database data cluster
 // in /tmp/db.
 var ctx = PostgresContext{
-	"/tmp/db",
-	"/tmp/postgres",
-	"/tmp/db-log",
+	data_folder:   "/tmp/db",
+	engine_folder: "/tmp/postgres",
+	log_folder:    "/tmp/db-log",
+	username:      "testuser",
+	password:      "testpass",
+	port:          19999,
 }
 
 func TestInit(t *testing.T) {

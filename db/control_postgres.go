@@ -70,42 +70,6 @@ func pg_status(ctx *PostgresContext) status {
 	}
 }
 
-func pg_create_db(ctx *PostgresContext, args ...string) (string, error) {
-
-	log.Printf("running command: %v", args)
-
-	var createdb = filepath.Clean(filepath.Join(ctx.engine_folder, "bin", "createdb"))
-	if _, err := os.Stat(createdb); os.IsNotExist(err) {
-		return "", &PostgresControlError{
-			fmt.Sprintf("Unable to find createdb at '%v'.", createdb),
-			-1,
-			ctx,
-		}
-	}
-
-	cmd := exec.Command(createdb, args...)
-	cmd.Env = []string{
-		"PGUSER=" + ctx.username,
-		"PGPASSWORD=" + ctx.password,
-		"PGHOST=locahost",
-		"PGPORT=" + string(ctx.port),
-	}
-
-	raw_out, err := cmd.Output()
-	out := string(raw_out)
-	log.Print(out)
-
-	if err != nil {
-		return out, &PostgresControlError{
-			err.Error(),
-			-1,
-			ctx,
-		}
-	}
-
-	return out, nil
-}
-
 func logging_flag(ctx *PostgresContext) string {
 	return "--log=" + filepath.Join(ctx.log_folder, "data-engine.log")
 }
@@ -142,18 +106,17 @@ func (ctx *PostgresContext) Init(options map[string]string) error {
 	}
 	pwfile.Write([]byte(ctx.password))
 	pwfile.Close()
+	defer os.Remove(pwfile.Name())
 
-	init_options := fmt.Sprintf(`"--username=%v --pwfile=%v"`, ctx.username, pwfile)
+	init_options := fmt.Sprintf(`"--username=%v --pwfile=%v"`, ctx.username, pwfile.Name())
 
 	_, err = pg_ctl(ctx, "-D", ctx.data_folder, logging_flag(ctx), "init", "-o", init_options)
-
-	os.Remove(pwfile.Name())
 
 	return err
 }
 
 func (ctx *PostgresContext) Start() error {
-	options := fmt.Sprintf(`"-p %v"`, ctx.Port)
+	options := fmt.Sprintf(`"-p %v"`, ctx.port)
 	_, err := pg_ctl(ctx, "start", "-w", "-D", ctx.data_folder, logging_flag(ctx), "-o", options)
 	return err
 }
